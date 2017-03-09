@@ -23,6 +23,10 @@ public class Player : MovingObject
 	private int food;                           //Used to store player food points total during level.
 	private Vector2 touchOrigin = -Vector2.one; //Used to store location of screen touch origin for mobile controls.
 
+	private Color colorStart;
+	private Color colorEnd;
+	private int duration = 3;
+
 
 	//Start overrides the Start function of MovingObject
 	protected override void Start ()
@@ -194,7 +198,7 @@ public class Player : MovingObject
 			SoundManager.instance.RandomizeSfx (eatSound1, eatSound2);
 
 			//Disable the food object the player collided with.
-			other.gameObject.SetActive (false);
+			StartCoroutine (itemsFadeOut (other.gameObject, pointsPerFood));
 		}
 
 		//Check if the tag of the trigger collided with is Soda.
@@ -210,8 +214,35 @@ public class Player : MovingObject
 			SoundManager.instance.RandomizeSfx (drinkSound1, drinkSound2);
 
 			//Disable the soda object the player collided with.
-			other.gameObject.SetActive (false);
+			StartCoroutine (itemsFadeOut (other.gameObject, pointsPerSoda));
+
 		}
+	}
+
+	//Coroutine for items fade_out
+	IEnumerator itemsFadeOut (GameObject item, int points)
+	{
+		// disabling boxcollider
+		item.GetComponent<BoxCollider2D> ().enabled = false;
+
+		// setting food points text
+		Text foodPoints = item.GetComponentInChildren<Text>();
+		foodPoints.text = "+" + points;
+
+		// getting sprite render 
+		SpriteRenderer sprite = item.GetComponent<SpriteRenderer> ();
+		Vector3 dimension = item.transform.localScale;
+		float delta = 0.08f;
+		for (float alpha = 1.0f; alpha > 0; alpha -= delta) 
+		{
+			foodPoints.color = new Color (foodPoints.color.r, foodPoints.color.g, foodPoints.color.b, alpha);
+			sprite.color = new Color (sprite.color.r, sprite.color.g, sprite.color.b, alpha);
+			dimension = new Vector3 (dimension.x + delta, dimension.y + delta, 0.0f);
+			item.transform.localScale = dimension;
+			yield return new WaitForSeconds (0.01f);
+		}
+		item.SetActive (false);
+		yield return null;
 	}
 
 
